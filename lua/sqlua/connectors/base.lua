@@ -308,6 +308,26 @@ function Connection:executeUv(
             else
                 local base = self:baseCleanResults(table.concat(results, ""))
                 local final = self:dbmsCleanResults(base, query_type)
+                if query_type == "connect" and (self.dbms == "mysql" or self.dbms == "mariadb") then
+                    local has_table_output = false
+                    local preview = nil
+                    for _, line in ipairs(final) do
+                        if not preview and line:match("%S") then preview = vim.trim(line) end
+                        if line:match("^%s*ERROR") or line:match("Access denied") or line:match("Unknown database") then
+                            preview = vim.trim(line)
+                        end
+                        if line:match("^%s*|") or line:match("^%+") then has_table_output = true end
+                    end
+                    if not has_table_output then
+                        self.loading = false
+                        vim.notify(
+                            "SQLua schema load failed for " .. self.name .. ": " .. tostring(preview or "no output"),
+                            vim.log.levels.ERROR
+                        )
+                        ui:refreshSidebar()
+                        return
+                    end
+                end
                 if next(final) ~= nil then
                     if query_type == "connect" then
                         self:getSchema(final)
