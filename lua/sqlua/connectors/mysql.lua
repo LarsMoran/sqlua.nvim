@@ -27,6 +27,9 @@ function Mysql:setup(name, url, options)
             table.insert(s.cli_args, "--" .. k .. "=" .. v)
         end
     end
+    if s.connection_info.host or s.connection_info.port then
+        table.insert(s.cli_args, "--protocol=TCP")
+    end
     table.insert(s.cli_args, "-t") -- table output
     -- FIXME: causes issues with information schema
     -- table.insert(s.cli_args, "--safe-updates")
