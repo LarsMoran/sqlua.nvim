@@ -116,6 +116,10 @@ Specific formatting is required for certain databases. Here are some samples of 
 You can override the default settings by feeding the table as a table to the setup() function:
 ```lua
 {
+    -- where to open SQLua:
+    -- "split" keeps the current behavior
+    -- "tab" opens SQLua in a dedicated tab
+    open_mode = "split",
     -- the parent folder that databases will be placed, holding
     -- various tmp files and other saved queries.
     db_save_location = "~/.local/share/nvim/sqlua/",
@@ -135,6 +139,14 @@ You can override the default settings by feeding the table as a table to the set
         insert_execute_query = "<C-r>",
     }
 }
+```
+
+To keep SQLua separate from your current working layout, use:
+
+```lua
+require("sqlua").setup({
+    open_mode = "tab",
+})
 ```
 ---
 ## Usage:

@@ -35,6 +35,7 @@ local Windows = {
 ---@field active_db string
 ---@field dbs table
 ---@field num_dbs integer
+---@field tabpage integer|nil
 ---@field buffers Buffers
 ---@field windows Windows
 ---@field last_cursor_position table
@@ -53,6 +54,7 @@ local UI = {
     active_db = "",
     dbs = {},
     num_dbs = 0,
+    tabpage = nil,
     buffers = Buffers,
     windows = Windows,
     last_cursor_position = {
@@ -103,6 +105,36 @@ end
 local ICONS_SUB_STRING = UI_ICONS.icons_sub()
 local ICONS_SUB_REGEX = "[" .. ICONS_SUB_STRING .. "]"
 local EDITOR_NUM = 1
+
+local function resetUIState()
+    UI.initial_layout_loaded = false
+    UI.help_toggled = false
+    UI.help_length = 0
+    UI.buffers_expanded = false
+    UI.active_db = ""
+    UI.dbs = {}
+    UI.num_dbs = 0
+    UI.buffers.sidebar = nil
+    UI.buffers.results = nil
+    UI.buffers.query_float = nil
+    UI.buffers.editors = {}
+    UI.windows.sidebar = nil
+    UI.windows.results = nil
+    UI.windows.query_float = nil
+    UI.windows.editors = {}
+    UI.last_cursor_position = {
+        sidebar = {},
+        editor = {},
+        result = {},
+    }
+    UI.last_active_buffer = 0
+    UI.current_active_buffer = 0
+    UI.last_active_window = 0
+    UI.current_active_window = 0
+    UI.queries = {}
+    UI.results_expanded = false
+    EDITOR_NUM = 1
+end
 
 ---@param buf buffer
 ---@param val boolean
@@ -1335,8 +1367,22 @@ end
 ---@return nil
 function UI:setup(config)
     self.options = config
-    for _, buf in pairs(vim.api.nvim_list_bufs()) do
-        vim.api.nvim_buf_delete(buf, { force = true, unload = false })
+    if config.open_mode ~= "tab" then
+        for _, buf in pairs(vim.api.nvim_list_bufs()) do
+            vim.api.nvim_buf_delete(buf, { force = true, unload = false })
+        end
+    elseif self.tabpage and vim.api.nvim_tabpage_is_valid(self.tabpage) then
+        vim.api.nvim_set_current_tabpage(self.tabpage)
+        vim.cmd("tabclose")
+    end
+
+    resetUIState()
+
+    if config.open_mode == "tab" then
+        vim.cmd("tabnew")
+        self.tabpage = vim.api.nvim_get_current_tabpage()
+    else
+        self.tabpage = vim.api.nvim_get_current_tabpage()
     end
 
     local execute_callback = function()

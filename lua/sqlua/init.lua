@@ -11,6 +11,9 @@ SQLUA_ROOT_DIR = utils.concat({
 })
 
 DEFAULT_CONFIG = {
+    -- where to open SQLua: "split" keeps the current behavior,
+    -- "tab" opens SQLua in a dedicated tabpage.
+    open_mode = "split",
     db_save_location = utils.concat({ SQLUA_ROOT_DIR, "dbs" }),
     connections_save_location = utils.concat({ SQLUA_ROOT_DIR, "connections.json" }),
     default_limit = 200,
