@@ -286,6 +286,16 @@ function Connection:executeUv(
         args = self.cli_args,
         stdio = { stdin, stdout, stderr },
     })
+    if not handle then
+        stdin:close()
+        stdout:close()
+        stderr:close()
+        vim.schedule(function()
+            vim.notify("SQLua failed to start " .. self.cmd .. ": " .. tostring(pid), vim.log.levels.ERROR)
+        end)
+        self.loading = false
+        return
+    end
 
     local results = {}
     local ui = require("sqlua.ui")

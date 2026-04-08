@@ -12,8 +12,8 @@ function Mysql:setup(name, url, options)
     local s = Mysql:new()
     s.name = name
     s.url = url
-    s.dbms = "mariadb"
-    s.cmd = "mariadb"
+    s.dbms = "mysql"
+    s.cmd = "mysql"
     s.cli_args = {}
     s.connection_info = s:parseUrl()
     for k, v in pairs(s.connection_info) do
@@ -28,8 +28,9 @@ function Mysql:setup(name, url, options)
         end
     end
     table.insert(s.cli_args, "-t") -- table output
-    table.insert(s.cli_args, "--safe-updates")
-    table.insert(s.cli_args, "--select-limit=" .. options.default_limit)
+    -- FIXME: causes issues with information schema
+    -- table.insert(s.cli_args, "--safe-updates")
+    -- table.insert(s.cli_args, "--select-limit=" .. options.default_limit)
     local queries = require("sqlua.queries." .. s.dbms)
     s.schema_query = string.gsub(queries.SchemaQuery, "\n", " ")
     return s
@@ -53,8 +54,11 @@ end
 ---@param data table raw result data
 ---@param query_type string
 function Mysql:dbmsCleanResults(data, query_type)
-    if string.find(data[1], "mysql%: %[Warning%]") then table.remove(data, 1) end
-    return data
+    local cleaned = {}
+    for _, line in ipairs(data) do
+        if not string.find(line, "^mysql%: %[Warning%]") then table.insert(cleaned, line) end
+    end
+    return cleaned
 end
 
 return Mysql
