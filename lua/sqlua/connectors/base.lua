@@ -308,12 +308,18 @@ function Connection:executeUv(
             else
                 local base = self:baseCleanResults(table.concat(results, ""))
                 local final = self:dbmsCleanResults(base, query_type)
-                if query_type == "connect" and (self.dbms == "mysql" or self.dbms == "mariadb") then
+                if query_type == "connect" and (self.dbms == "mysql" or self.dbms == "mariadb" or self.dbms == "postgres") then
                     local has_table_output = false
                     local preview = nil
                     for _, line in ipairs(final) do
                         if not preview and line:match("%S") then preview = vim.trim(line) end
-                        if line:match("^%s*ERROR") or line:match("Access denied") or line:match("Unknown database") then
+                        if line:match("^%s*ERROR")
+                            or line:match("Access denied")
+                            or line:match("Unknown database")
+                            or line:match("^psql:%s+error:")
+                            or line:match("^FATAL:")
+                            or line:match("password authentication failed")
+                        then
                             preview = vim.trim(line)
                         end
                         if line:match("^%s*|") or line:match("^%+") then has_table_output = true end
